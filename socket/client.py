@@ -6,7 +6,7 @@ def receive_messages(s):
     while True:
         data = s.recv(1024)
         if not data:
-            print('Fechando a conexão')
+            print('Cliente: Fechando a conexão')
             s.close()
             break
         print('\nServidor:', data.decode())
@@ -22,7 +22,7 @@ def send_messages(s):
 
 def get_input(prompt, default, validator):
     while True:
-        user_input = input(f"{prompt}, (padrão: {default}): ").strip()
+        user_input = input(f"{prompt} (padrão: {default}): ").strip()
         if not user_input:
             return default
         if validator(user_input):
@@ -53,6 +53,18 @@ def main():
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((host, port))
+
+        for _ in range(3):
+            prompt_password = input("Digite a senha de conexão: ")
+            s.sendall(prompt_password.encode('utf-8'))
+            response = s.recv(1024).decode().strip()
+            print(response)
+            if response == "Servidor: Senha correta":
+                break
+        else:
+            print("Cliente: Tentativas de senha esgotadas. Fechando a conexão.")
+            s.close()
+            return
 
         receive_thread = threading.Thread(target=receive_messages, args=(s,))
         send_thread = threading.Thread(target=send_messages, args=(s,))
